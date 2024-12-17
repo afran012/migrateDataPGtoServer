@@ -19,6 +19,7 @@ const sqlConfig = {
   options: {
     encrypt: true, // Use this if you're on Windows Azure
     enableArithAbort: true,
+    trustServerCertificate: true, // Add this line to trust self-signed certificates
   },
 };
 
