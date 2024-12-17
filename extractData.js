@@ -1,7 +1,7 @@
-
 require('dotenv').config();
 const { Pool } = require('pg');
 const fs = require('fs');
+const cliProgress = require('cli-progress');
 
 const pool = new Pool({
   user: process.env.PG_USER,
@@ -19,7 +19,16 @@ const extractData = async () => {
       SELECT * FROM public.diferencia_urbana_area;
     `;
     const result = await client.query(query);
+
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar.start(result.rows.length, 0);
+
     fs.writeFileSync('data.json', JSON.stringify(result.rows));
+    for (let i = 0; i < result.rows.length; i++) {
+      bar.update(i + 1);
+    }
+    bar.stop();
+
     client.release();
     console.log('Data extracted successfully');
   } catch (err) {

@@ -1,7 +1,7 @@
-
 require('dotenv').config();
 const sql = require('mssql');
 const fs = require('fs');
+const cliProgress = require('cli-progress');
 
 const config = {
   user: process.env.SQLSERVER_USER,
@@ -12,6 +12,7 @@ const config = {
   options: {
     encrypt: true, // Use this if you're on Windows Azure
     enableArithAbort: true,
+    trustServerCertificate: true, // Add this line to trust self-signed certificates
   },
 };
 
@@ -20,7 +21,10 @@ const insertData = async () => {
     const pool = await sql.connect(config);
     const data = JSON.parse(fs.readFileSync('data.json', 'utf8'));
 
-    for (const row of data) {
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar.start(data.length, 0);
+
+    for (const [index, row] of data.entries()) {
       const query = `
         INSERT INTO public.diferencia_rural_area (id_0, geom, id, fid, fid_2, avaluo_ter, avaluo_com, terreno_co, dimension, etiqueta, relacion_s, espacio_de, local_id, created_us, created_da, last_edite, last_edi_1, globalid, shape_leng, shape_area, area_m2)
         VALUES (@id_0, @geom, @id, @fid, @fid_2, @avaluo_ter, @avaluo_com, @terreno_co, @dimension, @etiqueta, @relacion_s, @espacio_de, @local_id, @created_us, @created_da, @last_edite, @last_edi_1, @globalid, @shape_leng, @shape_area, @area_m2);
@@ -48,7 +52,10 @@ const insertData = async () => {
         .input('shape_area', sql.Numeric, row.shape_area)
         .input('area_m2', sql.Numeric, row.area_m2)
         .query(query);
+
+      bar.update(index + 1);
     }
+    bar.stop();
 
     console.log('Data inserted successfully');
   } catch (err) {
