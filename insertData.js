@@ -18,12 +18,17 @@ const config = {
 
 const insertData = async () => {
   try {
+    console.log('Connecting to SQL Server...');
     const pool = await sql.connect(config);
+    console.log('Connected to SQL Server successfully.');
+
+    console.log('Reading data from data.json...');
     const data = JSON.parse(fs.readFileSync('data.json', 'utf8'));
 
     const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     bar.start(data.length, 0);
 
+    console.log('Inserting data into SQL Server...');
     for (const [index, row] of data.entries()) {
       const query = `
         INSERT INTO public.diferencia_rural_area (id_0, geom, id, fid, fid_2, avaluo_ter, avaluo_com, terreno_co, dimension, etiqueta, relacion_s, espacio_de, local_id, created_us, created_da, last_edite, last_edi_1, globalid, shape_leng, shape_area, area_m2)
@@ -54,10 +59,11 @@ const insertData = async () => {
         .query(query);
 
       bar.update(index + 1);
+      console.log(`Inserted row ${index + 1} of ${data.length}`);
     }
     bar.stop();
 
-    console.log('Data inserted successfully');
+    console.log('Data insertion completed successfully.');
   } catch (err) {
     console.error('Error inserting data:', err);
   } finally {
